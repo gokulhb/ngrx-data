@@ -6,12 +6,13 @@ import { MatInputModule } from "@angular/material/input";
 import {RouterModule} from "@angular/router";
 import {ReactiveFormsModule} from "@angular/forms";
 import {MatButtonModule} from "@angular/material/button";
-import {AuthService} from "./auth.service";
 import { StoreModule } from '@ngrx/store';
-import * as fromLogin from './reducers';
-import { EffectsModule } from '@ngrx/effects';
-import { LoginEffects } from './authstore/login.effects';
-
+import {AuthService} from "./auth.service";
+import * as fromAuth from './reducers';
+import {authReducer} from './reducers';
+import {AuthGuard} from './auth.guard';
+import {EffectsModule} from '@ngrx/effects';
+import {AuthEffects} from './auth.effects';
 
 @NgModule({
     imports: [
@@ -21,9 +22,8 @@ import { LoginEffects } from './authstore/login.effects';
         MatInputModule,
         MatButtonModule,
         RouterModule.forChild([{path: '', component: LoginComponent}]),
-        StoreModule.forFeature('login', fromLogin.authReducer),
-        EffectsModule.forFeature([LoginEffects])
-        // { metaReducers: fromAuth.metaReducers }
+        StoreModule.forFeature('auth', authReducer),
+        EffectsModule.forFeature([AuthEffects])
     ],
     declarations: [LoginComponent],
     exports: [LoginComponent]
@@ -33,7 +33,8 @@ export class AuthModule {
         return {
             ngModule: AuthModule,
             providers: [
-              AuthService
+              AuthService,
+                AuthGuard
             ]
         }
     }

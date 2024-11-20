@@ -6,10 +6,6 @@ import {EditCourseDialogComponent} from '../edit-course-dialog/edit-course-dialo
 import { MatDialog } from '@angular/material/dialog';
 import {map, shareReplay} from 'rxjs/operators';
 import {CoursesHttpService} from '../services/courses-http.service';
-import { AppState } from '../../reducers';
-import { select, Store } from '@ngrx/store';
-import { CourseActions } from '../coursestore/action-types';
-import { getAdvanceCourses, getAllCourses, getBeginnerCourses } from '../coursestore/course.selectors';
 
 
 
@@ -31,54 +27,39 @@ export class HomeComponent implements OnInit {
 
     constructor(
       private dialog: MatDialog,
-      private store: Store<AppState>,
       private coursesHttpService: CoursesHttpService) {
 
     }
 
     ngOnInit() {
-      // this.store.dispatch(CourseActions.loadCourseList());
-      // this.store.subscribe((data) => console.log(data));
       this.reload();
     }
 
   reload() {
 
-    // let courses$ = this.store.pipe(select(getAllCourses))
-    // this.beginnerCourses$= courses$.pipe(
-    //   map(courses=> courses.filter(course => course.category == 'BEGINNER'))
-    // )
-    // this.advancedCourses$= courses$.pipe(
-    //   map(courses=> courses.filter(course => course.category == 'ADVANCED'))
-    // )
-  
-    this.beginnerCourses$=this.store.pipe(select(getBeginnerCourses))
-    this.advancedCourses$=this.store.pipe(select(getAdvanceCourses))
-    
+    const courses$ = this.coursesHttpService.findAllCourses()
+      .pipe(
+        map(courses => courses.sort(compareCourses)),
+        shareReplay()
+      );
 
-    // const courses$ = this.coursesHttpService.findAllCourses()
-    //   .pipe(
-    //     map(courses => courses.sort(compareCourses)),
-    //     shareReplay()
-    //   );
+    this.loading$ = courses$.pipe(map(courses => !!courses));
 
-    // this.loading$ = courses$.pipe(map(courses => !!courses));
-
-    // this.beginnerCourses$ = courses$
-    //   .pipe(
-    //     map(courses => courses.filter(course => course.category == 'BEGINNER'))
-    //   );
+    this.beginnerCourses$ = courses$
+      .pipe(
+        map(courses => courses.filter(course => course.category == 'BEGINNER'))
+      );
 
 
-    // this.advancedCourses$ = courses$
-    //   .pipe(
-    //     map(courses => courses.filter(course => course.category == 'ADVANCED'))
-    //   );
+    this.advancedCourses$ = courses$
+      .pipe(
+        map(courses => courses.filter(course => course.category == 'ADVANCED'))
+      );
 
-    // this.promoTotal$ = courses$
-    //     .pipe(
-    //         map(courses => courses.filter(course => course.promo).length)
-    //     );
+    this.promoTotal$ = courses$
+        .pipe(
+            map(courses => courses.filter(course => course.promo).length)
+        );
 
   }
 

@@ -1,12 +1,15 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import {FormBuilder, FormGroup, Validators} from "@angular/forms";
+
+import {Store} from "@ngrx/store";
+
 import {AuthService} from "../auth.service";
+import {tap} from "rxjs/operators";
+import {noop} from "rxjs";
 import {Router} from "@angular/router";
-import { Store } from '@ngrx/store';
-import { AuthState } from '../reducers';
-import { noop, Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
-import { loginActions } from '../authstore/action-types';
+import {AppState} from '../../reducers';
+import {login} from '../auth.actions';
+import {AuthActions} from '../action-types';
 
 @Component({
   selector: 'login',
@@ -16,13 +19,12 @@ import { loginActions } from '../authstore/action-types';
 export class LoginComponent implements OnInit {
 
   form: FormGroup;
- 
 
   constructor(
       private fb:FormBuilder,
       private auth: AuthService,
       private router:Router,
-    private store:Store<AuthState>) {
+      private store: Store<AppState>) {
 
       this.form = fb.group({
           email: ['test@angular-university.io', [Validators.required]],
@@ -37,17 +39,26 @@ export class LoginComponent implements OnInit {
 
   login() {
 
-    let formValue = this.form.getRawValue()
-    this.auth.login(formValue?.email,formValue?.password,true).pipe(tap((user)=>{
-      user={
-        ...user,
-        isLoggedIn:true
-      }
-      let action= loginActions.login({user})
-      this.store.dispatch(action)
-      this.router.navigate(['/courses'])
-    }))
-    .subscribe(noop,()=> alert("Login failed"))
+      const val = this.form.value;
+
+      this.auth.login(val.email, val.password)
+          .pipe(
+              tap(user => {
+
+                  console.log(user);
+
+                  this.store.dispatch(login({user}));
+
+                  this.router.navigateByUrl('/courses');
+
+              })
+          )
+          .subscribe(
+              noop,
+              () => alert('Login Failed')
+          );
+
+
 
   }
 

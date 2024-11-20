@@ -1,80 +1,73 @@
-import { Component, OnInit } from "@angular/core";
-import { Observable, of } from "rxjs";
-import { map } from "rxjs/operators";
-import {
-  NavigationCancel,
-  NavigationEnd,
-  NavigationError,
-  NavigationStart,
-  Router,
-} from "@angular/router";
-import { select, Store } from "@ngrx/store";
-import { AuthState } from "./auth/reducers";
-import { loginActions } from "./auth/authstore/action-types";
-import { User } from "./auth/model/user.model";
-import { isLoggedInSelector } from "./auth/authstore/login.selector";
+import {Component, OnInit} from '@angular/core';
+import {select, Store} from '@ngrx/store';
+import {Observable} from 'rxjs';
+import {distinctUntilChanged, map} from 'rxjs/operators';
+import {NavigationCancel, NavigationEnd, NavigationError, NavigationStart, Router} from '@angular/router';
+import {AppState} from './reducers';
+import {isLoggedIn, isLoggedOut} from './auth/auth.selectors';
+import {login, logout} from './auth/auth.actions';
 
 @Component({
-  selector: "app-root",
-  templateUrl: "./app.component.html",
-  styleUrls: ["./app.component.css"],
+    selector: 'app-root',
+    templateUrl: './app.component.html',
+    styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit {
-  loading = true;
-  public isLoggedIn$: Observable<boolean>=of(false);
-  public user:User
 
+    loading = true;
 
-  constructor(private router: Router,
-              private store: Store) 
-   {}
+    isLoggedIn$: Observable<boolean>;
 
-  ngOnInit() {
-    this.router.events.subscribe((event) => {
-      switch (true) {
-        case event instanceof NavigationStart: {
-          this.loading = true;
-          break;
+    isLoggedOut$: Observable<boolean>;
+
+    constructor(private router: Router,
+                private store: Store<AppState>) {
+
+    }
+
+    ngOnInit() {
+
+        const userProfile = localStorage.getItem("user");
+
+        if (userProfile) {
+            this.store.dispatch(login({user: JSON.parse(userProfile)}));
         }
 
-        case event instanceof NavigationEnd:
-        case event instanceof NavigationCancel:
-        case event instanceof NavigationError: {
-          this.loading = false;
-          break;
-        }
-        default: {
-          break;
-        }
-      }
-    });
-    // this is used to get the user from the store and update the login status
-    // but this will trigger every time the store is updated in any part of the app
-    // to overcome his we can use selector called select
-    // this.store.subscribe((data)=>{
-    //   console.log(data);
-    //   this.user=data['login']?.user
-    //   this.isLoggedIn$ = of(data['login']?.user?.isLoggedIn) || of(false);
-    // })
-    // this is used to get the user from the store and update the login status only when there is a change in the  value
-    // we an also create a feature selector to get the value of that particular feature
-  //  this.isLoggedIn$= this.store.pipe((
-  //     select(state =>state['login']?.user?.isLoggedIn)
-  //   ))
-  let user = localStorage.getItem('user')
-  if(user){
-    this.store.dispatch(loginActions.login({user:JSON.parse(user)}))
-  }
-  
-    this.isLoggedIn$= this.store.pipe((
-      select(isLoggedInSelector)
-    ))
+        this.router.events.subscribe(event => {
+            switch (true) {
+                case event instanceof NavigationStart: {
+                    this.loading = true;
+                    break;
+                }
 
-  }
+                case event instanceof NavigationEnd:
+                case event instanceof NavigationCancel:
+                case event instanceof NavigationError: {
+                    this.loading = false;
+                    break;
+                }
+                default: {
+                    break;
+                }
+            }
+        });
 
-  logout() {
-    let user:User=undefined
-    this.store.dispatch(loginActions.logout({user}))
-    this.router.navigate([''])
-  }
+        this.isLoggedIn$ = this.store
+            .pipe(
+                select(isLoggedIn)
+            );
+
+        this.isLoggedOut$ = this.store
+            .pipe(
+                select(isLoggedOut)
+            );
+
+    }
+
+    logout() {
+
+        this.store.dispatch(logout());
+
+    }
+
 }

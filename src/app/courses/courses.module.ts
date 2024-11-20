@@ -21,21 +21,16 @@ import {MatCardModule} from '@angular/material/card';
 import {MatButtonModule} from '@angular/material/button';
 import {MatIconModule} from '@angular/material/icon';
 import {RouterModule, Routes} from '@angular/router';
-import { CourseResolver } from './coursestore/course.resolver';
-import { EffectsModule } from '@ngrx/effects';
-import { CourseEffects } from './coursestore/course.effects';
-import { StoreModule } from '@ngrx/store';
-import { courseReducer } from './reducers/course.reducers';
+import { EntityDataService, EntityDefinitionService, EntityMetadataMap} from '@ngrx/data';
+import {compareCourses, Course} from './model/course';
 
+import {compareLessons, Lesson} from './model/lesson';
 
 
 export const coursesRoutes: Routes = [
   {
     path: '',
-    component: HomeComponent,
-    resolve: {
-      courseList:CourseResolver
-    }
+    component: HomeComponent
 
   },
   {
@@ -43,7 +38,6 @@ export const coursesRoutes: Routes = [
     component: CourseComponent
   }
 ];
-
 
 @NgModule({
   imports: [
@@ -63,9 +57,7 @@ export const coursesRoutes: Routes = [
     MatDatepickerModule,
     MatMomentDateModule,
     ReactiveFormsModule,
-    RouterModule.forChild(coursesRoutes),
-    StoreModule.forFeature('courses',courseReducer ),
-    EffectsModule.forFeature([CourseEffects]),
+    RouterModule.forChild(coursesRoutes)
   ],
   declarations: [
     HomeComponent,
@@ -79,6 +71,7 @@ export const coursesRoutes: Routes = [
     EditCourseDialogComponent,
     CourseComponent
   ],
+  entryComponents: [EditCourseDialogComponent],
   providers: [
     CoursesHttpService
   ]

@@ -4,10 +4,6 @@ import {Course} from '../model/course';
 import {FormBuilder, FormGroup, Validators} from '@angular/forms';
 import {Observable} from 'rxjs';
 import {CoursesHttpService} from '../services/courses-http.service';
-import { Store } from '@ngrx/store';
-import { AppState } from '../../reducers';
-import { CourseActions } from '../coursestore/action-types';
-import { Update } from '@ngrx/entity';
 
 @Component({
   selector: 'course-dialog',
@@ -30,9 +26,7 @@ export class EditCourseDialogComponent {
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<EditCourseDialogComponent>,
     @Inject(MAT_DIALOG_DATA) data,
-    // private coursesService: CoursesHttpService,
-    private store:Store<AppState>
-  ) {
+    private coursesService: CoursesHttpService) {
 
     this.dialogTitle = data.dialogTitle;
     this.course = data.course;
@@ -68,19 +62,11 @@ export class EditCourseDialogComponent {
       ...this.course,
       ...this.form.value
     };
-// this update object is used to update the store has two property which is used to update the values based on the id and we have assign the chnages 
-    const updatedCourse:Update<Course>={
-      id:course.id,
-      changes:course
-    }
-    this.store.dispatch(CourseActions.courseEdited({updatedCourse}))
-    this.dialogRef.close()
 
-    // this.coursesService.saveCourse(course.id, course)
-    //   .subscribe(
-    //     () => this.dialogRef.close()
-    //   )
-    
+    this.coursesService.saveCourse(course.id, course)
+      .subscribe(
+        () => this.dialogRef.close()
+      )
 
 
   }
